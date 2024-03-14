@@ -6,7 +6,7 @@ namespace Server.Services
     {
         public Task<IEnumerable<User>> GetAllUsers();
 
-        public Task<User> GetUserById(int id);
+        public Task<User> GetUserById(Guid id);
 
         public Task<IEnumerable<User>> SearchUser(string? FirstName, string? LastName, string birthDate);
 
@@ -16,6 +16,6 @@ namespace Server.Services
 
         public Task<bool> DeleteUser(User user);
 
-        public Task<bool> DeleteUser(int id);
+        public Task<bool> DeleteUser(Guid id);
     }
 }

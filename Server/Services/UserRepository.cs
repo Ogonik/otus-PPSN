@@ -1,4 +1,5 @@
-﻿using Npgsql;
+﻿using Microsoft.Extensions.Configuration;
+using Npgsql;
 using Server.Models;
 
 namespace Server.Services
@@ -15,7 +16,7 @@ namespace Server.Services
             throw new NotImplementedException();
         }
 
-        public Task<bool> DeleteUser(int id)
+        public Task<bool> DeleteUser(Guid id)
         {
             throw new NotImplementedException();
         }
@@ -36,21 +37,21 @@ namespace Server.Services
             {
                 while (await reader.ReadAsync())
                 {
-                    users.Add(new User() {
-                                Id = Convert.ToInt32(reader["id"]),
-                                FirstName = Convert.ToString(reader["first_name"]) ?? string.Empty,
-                                LastName = Convert.ToString(reader["last_name"]) ?? string.Empty,
-                                PhotoLink = Convert.ToString(reader["photo_link"]) ?? string.Empty,
-                                BirthDate = new DateOnly(DataTokensMetadata) 
-                                HireDate: Convert.ToDateTime(reader["hire_date"])
-                            });
+                    users.Add(new User()
+                    {
+                        Id = Guid.Parse(Convert.ToString(reader["id"] ?? string.Empty)),
+                        FirstName = Convert.ToString(reader["first_name"]) ?? string.Empty,
+                        LastName = Convert.ToString(reader["last_name"]) ?? string.Empty,
+                        PhotoLink = Convert.ToString(reader["photo_link"]) ?? string.Empty,
+                        BirthDate = new DateOnly()
+                    });
                 }
             }
             await connection.CloseAsync();
             return users.ToList();
         }
 
-        public Task<User> GetUserById(int id)
+        public Task<User> GetUserById(Guid id)
         {
             throw new NotImplementedException();
         }

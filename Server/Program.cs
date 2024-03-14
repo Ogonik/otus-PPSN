@@ -1,16 +1,22 @@
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Identity.Web;
 using Npgsql;
+using Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme);
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddBearerToken();
+
+builder.Services.AddRouting(options => {
+    options.LowercaseUrls = true;
+    });
 
 var connectionString = builder.Configuration.GetConnectionString("PostgreDB");
 builder.Services.AddScoped((provider) => new NpgsqlConnection(connectionString));
+
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+builder.Logging.AddJsonConsole();
 
 
 builder.Services.AddControllers();
@@ -27,10 +33,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
+app.UseRouting();
 app.MapControllers();
 
 app.Run();

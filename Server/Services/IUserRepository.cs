@@ -1,4 +1,5 @@
-﻿using Server.Models;
+﻿using Microsoft.AspNetCore.Mvc;
+using Server.Models.User;
 
 namespace Server.Services
 {
@@ -10,7 +11,7 @@ namespace Server.Services
 
         public Task<IEnumerable<User>> SearchUser(string? FirstName, string? LastName, string birthDate);
 
-        public Task<bool> CreateUser(User user);
+        public Task<int> CreateUser(User user, Guid userGuid);
 
         public Task<bool> UpdateUser(User user);
 

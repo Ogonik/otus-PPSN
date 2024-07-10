@@ -1,14 +1,44 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using BC = BCrypt.Net.BCrypt;
+using Microsoft.Extensions.Configuration;
 using Npgsql;
-using Server.Models;
+using Server.Models.User;
 
 namespace Server.Services
 {
     public class UserRepository(NpgsqlConnection connection) : IUserRepository, IDisposable
     {
-        public Task<bool> CreateUser(User user)
+        public async Task<int> CreateUser(User user, Guid userGuid)
         {
-            throw new NotImplementedException();
+            if (userGuid == Guid.Empty)
+                throw new Exception("User guid can't be empty");
+
+            var createUserQuery = "INSERT INTO public.\"user\"" +
+                " (id, first_name, last_name, photo_link, birth_date, sex, city, interests, email, email_confirmed, phone, \"password\")" +
+                " VALUES(@id, '@first_name', '@last_name', '@photo_link', '@birth_date', @sex, '@city', '@interests', '@email', @email_confirmed , '@phone', '@password');";
+            
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = createUserQuery;
+            
+            cmd.Parameters.AddWithValue("@id", NpgsqlTypes.NpgsqlDbType.Uuid, userGuid);
+            cmd.Parameters.AddWithValue("@first_name", NpgsqlTypes.NpgsqlDbType.Varchar, user.FirstName);
+            cmd.Parameters.AddWithValue("@last_name", NpgsqlTypes.NpgsqlDbType.Varchar, user.LastName);
+            cmd.Parameters.AddWithValue("@photo_link", NpgsqlTypes.NpgsqlDbType.Varchar, user.PhotoLink);
+            cmd.Parameters.AddWithValue("@birth_date", NpgsqlTypes.NpgsqlDbType.Date, user.BirthDate);
+            cmd.Parameters.AddWithValue("@sex", NpgsqlTypes.NpgsqlDbType.Integer, (int)user.Sex);
+            cmd.Parameters.AddWithValue("@city", NpgsqlTypes.NpgsqlDbType.Varchar, user.City);
+            cmd.Parameters.AddWithValue("@interests", NpgsqlTypes.NpgsqlDbType.Varchar, string.Join(',', user.Interests));
+            cmd.Parameters.AddWithValue("@email", NpgsqlTypes.NpgsqlDbType.Varchar, user.Email);
+            cmd.Parameters.AddWithValue("@email_confirmed", NpgsqlTypes.NpgsqlDbType.Boolean, user.EmailConfirmed);
+            cmd.Parameters.AddWithValue("@phone", NpgsqlTypes.NpgsqlDbType.Varchar, user.Phone);
+            cmd.Parameters.AddWithValue("@password", NpgsqlTypes.NpgsqlDbType.Varchar, BC.HashPassword(user.Password));
+
+            await connection.OpenAsync();
+
+            var result = await cmd.ExecuteNonQueryAsync();
+
+            await connection.CloseAsync();
+
+            return result;
         }
 
         public Task<bool> DeleteUser(User user)

@@ -16,7 +16,8 @@ builder.Services.AddScoped((provider) => new NpgsqlConnection(connectionString))
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
-builder.Logging.AddJsonConsole();
+//builder.Logging.AddJsonConsole();
+builder.Logging.AddConsole();
 
 
 builder.Services.AddControllers();

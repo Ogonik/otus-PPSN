@@ -33,6 +33,7 @@ namespace Server.Controllers
         {
             try
             {
+                
                 if (!_checkInputData(username, password))
                     return Results.BadRequest();
 
@@ -54,6 +55,7 @@ namespace Server.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex.Message + ex.StackTrace);
                 return Results.StatusCode(500);
             }
         }

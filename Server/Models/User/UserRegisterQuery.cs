@@ -7,14 +7,14 @@ namespace Server.Models.User
         /// <summary>
         /// Имя
         /// </summary>
-        [StringLength(50, ErrorMessage = "Значение поля \"Имя пользователя\" не может быть больше {0} символов")]
+        [StringLength(100, ErrorMessage = "Значение поля \"Имя пользователя\" не может быть больше {0} символов")]
         [Required(ErrorMessage = "Имя пользователя не может быть пустым")]
         public string FirstName { get; set; } = string.Empty;
 
         /// <summary>
         /// Фамилия
         /// </summary>
-        [StringLength(50, ErrorMessage = "Значение поля \"Фамилия пользователя\" не может быть больше {0} символов")]
+        [StringLength(100, ErrorMessage = "Значение поля \"Фамилия пользователя\" не может быть больше {0} символов")]
         [Required(ErrorMessage = "Фамилия пользователя не может быть пустой")]
         public string SecondName { get; set; } = string.Empty;
 
@@ -33,7 +33,7 @@ namespace Server.Models.User
         /// <summary>
         /// Город местонахождения
         /// </summary>
-        [StringLength(1050, ErrorMessage = "Значение поля \"Хобби, интересы и т.п.\" не может быть больше {0} символов")]
+        [StringLength(50, ErrorMessage = "Значение поля \"Город\" не может быть больше {0} символов")]
         public string City { get; set; } = string.Empty;
 
         /// <summary>
@@ -55,9 +55,9 @@ namespace Server.Models.User
         {
             errorMessage = string.Empty;
 
-            var minBirthDate = DateOnly.ParseExact("1900-01-01", "YYYY-MM-DD");
+            var minBirthDate = DateOnly.ParseExact("1900-01-01", "yyyy-MM-dd");
             var maxBirthDate = DateOnly.FromDateTime(DateTime.Now);
-            if (BirthDate > minBirthDate && BirthDate <= maxBirthDate)
+            if (BirthDate < minBirthDate && BirthDate > maxBirthDate)
             {
                 errorMessage = $"Значение поля \"Дата рождения\" должно быть между {minBirthDate} and {maxBirthDate}";
                 return false;

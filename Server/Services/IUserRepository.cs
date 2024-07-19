@@ -18,5 +18,7 @@ namespace Server.Services
         public Task<bool> DeleteUser(User user);
 
         public Task<bool> DeleteUser(Guid id);
+
+        public Task<int> DeleteAllUsers();
     }
 }

@@ -1,4 +1,5 @@
 
+using Microsoft.Extensions.Logging;
 using Npgsql;
 using NUnit.Framework.Internal;
 using Server.Models.User;
@@ -11,6 +12,8 @@ namespace ServerTests
     {
         public NpgsqlConnection connection { get; set; }
         public List<User> TestUsers { get; set; }
+
+        public Microsoft.Extensions.Logging.ILogger logger { get; set; } = LoggerFactory.Create(options => options.AddConsole()).CreateLogger("UserRepositoryTest");
 
         [SetUp]
         public void Setup()
@@ -37,14 +40,14 @@ namespace ServerTests
         {
             foreach (var testUser in TestUsers)
             {
-                _ñreateUserInternalTest(testUser);
+                _ñreateUserInternalTest(testUser, logger);
             }
         }
 
 
-        private void _ñreateUserInternalTest(User incomingUser)
+        private void _ñreateUserInternalTest(User incomingUser, Microsoft.Extensions.Logging.ILogger logger)
         {
-            IUserRepository userRepository = new UserRepository(connection);
+            IUserRepository userRepository = new UserRepository(connection, logger);
             
             var userGuid = Guid.NewGuid();
             userRepository.CreateUser(incomingUser, userGuid);

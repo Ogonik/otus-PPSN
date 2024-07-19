@@ -2,7 +2,7 @@
 
 namespace Server.Models.User
 {
-    public class User : Entity
+    public class User : Entity // TODO: при переезде на EF поменять на IdentityUser 
     {
         public User()
         { }
@@ -24,6 +24,7 @@ namespace Server.Models.User
         [StringLength(256, ErrorMessage = "Значение поля \"Фамилия пользователя\" не может быть больше {0} символов")]
         public string LastName { get; set; } = string.Empty;
 
+        [StringLength(128, ErrorMessage = "Значение поля \"PhotoLink\" не может быть больше {0} символов")]
         public string PhotoLink { get; set; } = string.Empty;
 
         public DateOnly BirthDate { get; set; } = DateOnly.MinValue;

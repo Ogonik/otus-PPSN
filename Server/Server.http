@@ -4,3 +4,5 @@ GET {{Server_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+POST {{Server_HostAddress}}/user/register

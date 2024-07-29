@@ -104,7 +104,8 @@ namespace Server.Controllers
         private ClaimsIdentity _getClaimsIdentity(User userIfExists)
         {
             var claims = new List<Claim>()
-                    {
+                    { 
+                        new("Id", userIfExists.Id.ToString()),
                         new(ClaimTypes.Name, userIfExists.Email),
                         new("FullName", userIfExists.LastName),
                         new(ClaimTypes.Role, "User"),

@@ -9,15 +9,13 @@ namespace Server.Services
 
         public Task<User> GetUserById(Guid id);
 
-        public Task<IEnumerable<User>> SearchUser(string? FirstName, string? LastName, string birthDate);
+        public Task<IEnumerable<User>> SearchUser(string FirstName, string LastName);
 
         public Task<int> CreateUser(User user, Guid userGuid);
 
         public Task<bool> UpdateUser(User user);
 
-        public Task<bool> DeleteUser(User user);
-
-        public Task<bool> DeleteUser(Guid id);
+        public Task<bool> DeleteUser(User user, bool hardDelete = false);
 
         public Task<int> DeleteAllUsers();
     }

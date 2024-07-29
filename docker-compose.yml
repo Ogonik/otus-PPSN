@@ -1,0 +1,50 @@
+version: '3.4'
+name: ppsn
+
+services:
+  ppsn_db: 
+    image: postgres:latest
+    container_name: ppsn_db
+    hostname: ppsn_db
+    restart: always
+    environment: 
+       - POSTGRES_DB=ppsn
+       - POSTGRES_USER=ppsn
+       - POSTGRES_PASSWORD=ppsn
+    volumes:
+      - ./.containers-data/ppsn.db:/var/lib/postgresql/data
+        # seed tables in clean launch with init.sql script
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+        #local_port:container_port
+      - 5434:5432
+    healthcheck:
+      test: [ "CMD", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      ppsn_network:
+        aliases:
+          - ppsn_db
+
+  server:
+    image: ${DOCKER_REGISTRY-}server
+    container_name: ppsn_backend
+    restart: always
+    depends_on: 
+      ppsn_db:
+        condition: service_healthy
+    links:
+      - "ppsn_db:database"
+    build:
+      context: .
+      dockerfile: Server/Dockerfile
+    ports:
+       - "5000:5000"
+       - "5001:5001"
+    networks:
+      - ppsn_network
+
+networks:
+  ppsn_network:

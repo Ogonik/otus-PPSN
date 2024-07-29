@@ -11,7 +11,7 @@ namespace Server.Models.User
         {
             FirstName = userRegisterQuery.FirstName;
             LastName = userRegisterQuery.SecondName;
-            BirthDate = userRegisterQuery.BirthDate;    
+            BirthDate = userRegisterQuery.BirthDate;
             City = userRegisterQuery.City;
             Password = userRegisterQuery.Password;
             Interests = new List<string> { userRegisterQuery.Biography };

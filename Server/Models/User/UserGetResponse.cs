@@ -14,6 +14,9 @@ namespace Server.Models.User
         
         public static explicit operator UserGetResponse(User user)
         {
+            if (user == null) 
+                return null;
+            
             return new UserGetResponse()
             {
                 FirstName = user.FirstName,

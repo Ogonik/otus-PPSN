@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Server.Models.User;
 using Server.Services;
+using System.Reflection.Metadata;
+using System.Security.Claims;
 
 namespace Server.Controllers
 {
@@ -18,10 +21,21 @@ namespace Server.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [EndpointSummary("Try get user by its id")]
-        [Consumes("application/json")]
         public async Task<ActionResult<UserGetResponse>> Get([SwaggerTryItOutDefaulValue("36f01d62-e8cb-4d98-9a2c-65f12d5c61fc")] Guid id)
         {
-            return Ok((UserGetResponse)_userRepository.GetUserById(id).Result);
+            _logger.LogInformation("Getting user by id: {0}", id);
+
+            var userId = (User.Identity as ClaimsIdentity)?.FindFirst("Id")?.Value;
+            _logger.LogInformation("Context is for user with id: {user_id}", userId);
+            var foundUser = await _userRepository.GetUserById(id);
+
+            if (foundUser != null)
+                return Ok((UserGetResponse)foundUser);
+            else
+            {
+                _logger.LogInformation("User not found by id: {user_id}", userId);
+                return NotFound();
+            }
         }
 
         [HttpPost]
@@ -35,11 +49,11 @@ namespace Server.Controllers
         [Consumes("application/x-www-form-urlencoded")]
         public async Task<ActionResult<UserRegisterResponse>> Register([FromForm] UserRegisterQuery userRegisterQuery)
         {
-            _logger.LogInformation("User creation process started");
+            _logger.LogInformation("User registration process started");
             try
             {
                 var user = new User(userRegisterQuery);
-                _logger.LogInformation("User entity object created from query");
+                _logger.LogInformation("User entity object created from form-data");
                 var errorMessage = string.Empty;
                 if (userRegisterQuery.Validate(out errorMessage))
                 {
@@ -85,9 +99,57 @@ namespace Server.Controllers
 
         }
 
-        private bool _checkUserRegisterQuery(UserRegisterQuery userRegisterQuery)
+
+        [HttpGet]
+        [Route("search")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+        [EndpointSummary("Поиск анкет")]
+        public async Task<ActionResult<List<UserGetResponse>>> Search([FromQuery] UserSearchQuery userSearchQuery)
         {
-            throw new NotImplementedException();
+            _logger.LogInformation("Searching user by: first_name '{firstName}' and last_name '{lastName}'", userSearchQuery.FirstName, userSearchQuery.LastName);
+
+            if (_validateUserSearchQuery(userSearchQuery, out var failMessage))
+            {
+                _logger.LogInformation("Start searching users...");
+
+                var result = await _userRepository.SearchUser(userSearchQuery.FirstName, userSearchQuery.LastName);
+                _logger.LogInformation("Found {count} users by search query", result.ToList().Count);
+
+                if (result.Any())
+                    return Ok(result.Select(x => (UserGetResponse)x));
+                else
+                    return NotFound();
+            }
+            else
+            {
+                _logger.LogInformation("Search query validation failed: {failMessage}", failMessage);
+                return BadRequest(failMessage);
+            }
+        }
+
+        private static bool _validateUserSearchQuery(UserSearchQuery userSearchQuery, out string failMessage)
+        {
+            const string AllClauseSign = "*";
+            failMessage = string.Empty;
+
+            if (userSearchQuery.FirstName == string.Empty && userSearchQuery.LastName == string.Empty)
+            {
+                failMessage = "Both First Name and Last Name search params can not be empty";
+                return false;
+            }
+
+            if (userSearchQuery.FirstName == AllClauseSign && userSearchQuery.LastName == AllClauseSign)
+            {
+                failMessage = "Both First Name and Last Name search params can not be set to *";
+                return false;
+            }
+
+            return true;
         }
     }
 }

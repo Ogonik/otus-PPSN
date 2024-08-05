@@ -1,0 +1,266 @@
+{
+	"info": {
+		"_postman_id": "1f81e0d3-a5dd-4678-a0f1-80592a300363",
+		"name": "Otus-highload-arhitect",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "4467239"
+	},
+	"item": [
+		{
+			"name": "Login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json()\r",
+							"\r",
+							"//var token = \"Token \" + jsonData.token;\r",
+							"var token = jsonData.accessToken;\r",
+							"\r",
+							"pm.test(\"Auth token received\", function () {\r",
+							"    pm.expect(token.length > 0);\r",
+							"}); \r",
+							"\r",
+							"pm.collectionVariables.set(\"token\", token);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {}
+			},
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "id",
+							"value": "{{user_guid}}",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "string",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{HOST}}/login",
+					"host": [
+						"{{HOST}}"
+					],
+					"path": [
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "User by id",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {}
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{HOST}}/user/get?id={{user_guid}}",
+					"host": [
+						"{{HOST}}"
+					],
+					"path": [
+						"user",
+						"get"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "{{user_guid}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Search",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {}
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{HOST}}/user/search?FirstName=string&LastName=string",
+					"host": [
+						"{{HOST}}"
+					],
+					"path": [
+						"user",
+						"search"
+					],
+					"query": [
+						{
+							"key": "FirstName",
+							"value": "string"
+						},
+						{
+							"key": "LastName",
+							"value": "string"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Register",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json()\r",
+							"\r",
+							"//var token = \"Token \" + jsonData.token;\r",
+							"var user_guid = jsonData.id;\r",
+							"\r",
+							"pm.test(\"User guid received\", function () {\r",
+							"    pm.expect(user_guid.length > 0);\r",
+							"}); \r",
+							"\r",
+							"pm.collectionVariables.set(\"user_guid\", user_guid);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {}
+			},
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "first_name",
+							"value": "string",
+							"type": "text"
+						},
+						{
+							"key": "second_name",
+							"value": "string",
+							"type": "text"
+						},
+						{
+							"key": "birth_date",
+							"value": "2020-01-01",
+							"type": "text"
+						},
+						{
+							"key": "biography",
+							"value": "интересы, хобби",
+							"type": "text"
+						},
+						{
+							"key": "city",
+							"value": "Москва",
+							"type": "text"
+						},
+						{
+							"key": "email",
+							"value": "email@email.com",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "string",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{HOST}}/user/register",
+					"host": [
+						"{{HOST}}"
+					],
+					"path": [
+						"user",
+						"register"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "HOST",
+			"value": "https://localhost:5000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_guid",
+			"value": "c0ea3306-e315-4856-97da-062af85baec6",
+			"type": "string"
+		}
+	]
+}

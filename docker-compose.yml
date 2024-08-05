@@ -16,10 +16,10 @@ services:
         # seed tables in clean launch with init.sql script
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-        #local_port:container_port
+        #host_port:container_port
       - 5434:5432
     healthcheck:
-      test: [ "CMD", "pg_isready" ]
+      test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}" ]
       interval: 10s
       timeout: 5s
       retries: 5

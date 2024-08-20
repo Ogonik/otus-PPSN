@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS public."user" (
 	last_name varchar(256) NULL,
 	photo_link varchar(128) NULL,
 	birth_date date NULL,
-	sex int2 NULL,
+	sex int4 NULL,
 	city varchar(64) NULL,
 	interests varchar NULL,
 	email varchar(128) NOT NULL,

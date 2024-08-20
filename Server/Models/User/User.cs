@@ -1,7 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using CsvHelper.Configuration.Attributes;
+using System.ComponentModel.DataAnnotations;
 
 namespace Server.Models.User
 {
+    [Delimiter(",")]
+    [CultureInfo("ru-RU")]
     public class User : Entity // TODO: при переезде на EF поменять на IdentityUser 
     {
         public User()
@@ -18,12 +21,15 @@ namespace Server.Models.User
             Email = userRegisterQuery.Email;
         }
 
+        [Index(0)]
         [StringLength(256, ErrorMessage = "Значение поля \"Имя пользователя\" не может быть больше {0} символов")]
         public string FirstName { get; set; } = string.Empty;
 
+        [Index(1)]
         [StringLength(256, ErrorMessage = "Значение поля \"Фамилия пользователя\" не может быть больше {0} символов")]
         public string LastName { get; set; } = string.Empty;
 
+        [Ignore]
         [StringLength(128, ErrorMessage = "Значение поля \"PhotoLink\" не может быть больше {0} символов")]
         public string PhotoLink { get; set; } = string.Empty;
 

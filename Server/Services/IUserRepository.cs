@@ -13,10 +13,12 @@ namespace Server.Services
 
         public Task<int> CreateUser(User user, Guid userGuid);
 
+        public Task<int> CreateUserBatch(List<User> users, int seed);
+        
         public Task<bool> UpdateUser(User user);
 
         public Task<bool> DeleteUser(User user, bool hardDelete = false);
 
-        public Task<int> DeleteAllUsers();
+        public Task<int> DeleteAllUsers(Guid preserveUserGuid);
     }
 }

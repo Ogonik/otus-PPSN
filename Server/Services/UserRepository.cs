@@ -49,6 +49,50 @@ namespace Server.Services
             return result;
         }
 
+
+        public async Task<int> CreateUserBatch(List<User> users, int seed = 1000)
+        {
+            logger.LogInformation("Batch creating users...");
+            var seedCount = 0;
+            var totalUsersSaved = 0;
+            await connection.OpenAsync();
+            using (var writer = await connection.BeginBinaryImportAsync("copy public.\"user\" FROM STDIN (FORMAT BINARY)"))
+            {
+                while (seedCount < (users.Count / seed) + 1)
+                {
+                    logger.LogInformation("  Seed #{seedCount}", seedCount);
+
+                    foreach (var user in users.Take(new Range(seedCount * seed, (seedCount + 1) * seed - 1)))
+                    {
+                        writer.StartRow();
+                        writer.Write(user.Id, NpgsqlTypes.NpgsqlDbType.Uuid);
+                        writer.Write(user.FirstName, NpgsqlTypes.NpgsqlDbType.Varchar);
+                        writer.Write(user.LastName, NpgsqlTypes.NpgsqlDbType.Varchar);
+                        writer.Write(user.PhotoLink, NpgsqlTypes.NpgsqlDbType.Varchar);
+                        writer.Write(user.BirthDate, NpgsqlTypes.NpgsqlDbType.Date);
+                        writer.Write((int)user.Sex);
+                        writer.Write(user.City, NpgsqlTypes.NpgsqlDbType.Varchar);
+                        writer.Write(string.Join(',', user.Interests), NpgsqlTypes.NpgsqlDbType.Varchar);
+                        writer.Write(user.Email, NpgsqlTypes.NpgsqlDbType.Varchar);
+                        writer.Write(user.EmailConfirmed, NpgsqlTypes.NpgsqlDbType.Boolean);
+                        writer.Write(user.Phone, NpgsqlTypes.NpgsqlDbType.Varchar);
+                        writer.Write(user.Password, NpgsqlTypes.NpgsqlDbType.Varchar);
+                        writer.Write(DateTime.UtcNow, NpgsqlTypes.NpgsqlDbType.TimestampTz);
+                        writer.Write(DateTime.UtcNow, NpgsqlTypes.NpgsqlDbType.TimestampTz);
+                        writer.Write(false, NpgsqlTypes.NpgsqlDbType.Boolean);
+                        totalUsersSaved++;
+                    }
+
+                    seedCount++;
+                }
+                await writer.CompleteAsync();
+
+                logger.LogInformation("Batch import finished {totalUsersSaved} users saved", totalUsersSaved);
+                await connection.CloseAsync();
+                return totalUsersSaved;
+            }
+        }
+
         public async Task<bool> DeleteUser(User user, bool hardDelete = false)
         {
             logger.LogInformation("Deleting user with uuid: {guid}", user.Id);
@@ -63,7 +107,7 @@ namespace Server.Services
             Debug.Assert(usersDeleted == 1);
 
             await connection.CloseAsync();
-            logger.LogInformation("UserRepository: user {deleted}", hardDelete ? "deleted":"marked removed");
+            logger.LogInformation("UserRepository: user {deleted}", hardDelete ? "deleted" : "marked removed");
             return usersDeleted == 1;
         }
 
@@ -91,10 +135,10 @@ namespace Server.Services
             return users;
         }
 
-        public async Task<int> DeleteAllUsers()
+        public async Task<int> DeleteAllUsers(Guid preserveUserGuid)
         {
             using var cmd = connection.CreateCommand();
-            cmd.CommandText = "DELETE FROM ppsn.user;";
+            cmd.CommandText = $"DELETE FROM public.\"user\" u WHERE u.Id != '{preserveUserGuid}'";
             await connection.OpenAsync();
 
             var result = await cmd.ExecuteNonQueryAsync();

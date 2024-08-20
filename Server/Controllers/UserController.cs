@@ -1,11 +1,15 @@
-using Microsoft.AspNetCore.Authentication.BearerToken;
+using CsvHelper;
+using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using NickBuhro.Translit;
 using Server.Models.User;
 using Server.Services;
-using System.Reflection.Metadata;
+using System;
+using System.Globalization;
 using System.Security.Claims;
+using System.Security.Cryptography;
+using BC = BCrypt.Net.BCrypt;
 
 namespace Server.Controllers
 {
@@ -91,14 +95,108 @@ namespace Server.Controllers
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         [EndpointSummary("Delete ALL Users in the app. ONLY IN DEVELOPMENT MODE")]
         [Consumes("application/json")]
-        public async Task<ActionResult<int>> DeleteAllUsers()
+        public async Task<ActionResult<int>> DeleteAllUsers([FromBody]Guid preserveUserGuid)
         {
-            if (hostingEnvironment.IsDevelopment()) { return NotFound(); };
+            _logger.LogInformation("Deleting all users but the first one");
 
-            return await _userRepository.DeleteAllUsers();
+            if (!hostingEnvironment.IsDevelopment()) { return NotFound(); };
+            if (_userRepository.GetUserById(preserveUserGuid) == null) { return NotFound(); };
+
+            return await _userRepository.DeleteAllUsers(preserveUserGuid);
 
         }
 
+        [HttpPost]
+        [Route("batch_insert")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+        [EndpointSummary("Загрузка пользователей из файла")]
+        [Consumes("multipart/form-data")]
+        public async Task<int> BatchInsert([FromForm] int seed, IFormFile file)
+        {
+            _logger.LogInformation("Batch inserting users");
+            var usersCreated = 0;
+
+            if (_checkInputUsersCSVFile(file))
+            {
+                var usersToInsert = _getUsersFromFile(file);
+                _logger.LogInformation("{userCount} users read from file. Inserting as binary from stdin...", usersToInsert.Count);
+                usersCreated = await _userRepository.CreateUserBatch(usersToInsert, seed);
+            }
+
+            return usersCreated;
+        }
+
+        private List<User> _getUsersFromFile(IFormFile usersFile)
+        {
+            var result = new List<User>();
+
+            if (usersFile != null)
+            {
+                var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+                {
+                    Delimiter = ",",
+                    HasHeaderRecord = false,
+                    
+                };
+
+                try
+                {
+                    using var reader = new StreamReader(usersFile.OpenReadStream());
+                    using var csv = new CsvReader(reader, config);
+
+                    var anonymousTypeDefinition = new
+                    {
+                        LastAndFirstName = string.Empty,
+                        BirthDate = string.Empty,
+                        City = string.Empty
+                    };
+
+                    var records = csv.GetRecords(anonymousTypeDefinition).ToList();
+                    
+                    foreach (var userRecord in records)
+                    {
+                        var name = userRecord.LastAndFirstName.Split(' ');
+                        var birthDate = DateOnly.ParseExact(userRecord.BirthDate, "yyyy-MM-dd");
+                        var user = new User()
+                        {
+                            Id = Guid.NewGuid(),
+                            FirstName = name[1],
+                            LastName = name[0],
+                            BirthDate = birthDate,
+                            City = userRecord.City,
+                            Email = Transliteration.CyrillicToLatin(userRecord.LastAndFirstName.Replace(' ', '_') + birthDate.Year.ToString()).Replace("'", string.Empty) + RandomString(6) + "@ppsn.ru",
+                            Password = userRecord.City,
+                        };
+                        result.Add(user);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // handle exception
+                }
+            }
+
+            return result;
+        }
+
+        private static Random random = new Random();
+
+        public static string RandomString(int length)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+
+        private bool _checkInputUsersCSVFile(IFormFile usersFile)
+        {
+            return true;
+        }
 
         [HttpGet]
         [Route("search")]

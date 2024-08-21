@@ -83,7 +83,7 @@ if (app.Environment.IsDevelopment())
     app.UseHttpLogging();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseRouting();
 app.MapControllers();

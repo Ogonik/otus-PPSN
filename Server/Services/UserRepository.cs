@@ -183,18 +183,18 @@ namespace Server.Services
 
             if (FirstName != string.Empty && LastName != string.Empty)
             {
-                whereClause = $" WHERE u.last_name LIKE @last_name AND u.first_name LIKE @first_name AND is_removed = false";
+                whereClause = $" WHERE u.last_name LIKE '%@last_name%' AND u.first_name LIKE '%@first_name%' AND is_removed = false";
                 cmd.Parameters.AddWithValue("@last_name", NpgsqlTypes.NpgsqlDbType.Varchar, LastName);
                 cmd.Parameters.AddWithValue("@first_name", NpgsqlTypes.NpgsqlDbType.Varchar, FirstName);
             }
             else if (FirstName == string.Empty)
             {
-                whereClause = $" WHERE u.last_name LIKE @last_name";
+                whereClause = $" WHERE u.last_name LIKE '%@last_name%'";
                 cmd.Parameters.AddWithValue("@last_name", NpgsqlTypes.NpgsqlDbType.Varchar, LastName);
             }
             else if (LastName == string.Empty)
             {
-                whereClause = $" WHERE u.first_name = @first_name";
+                whereClause = $" WHERE u.first_name LIKE '%@first_name%'";
                 cmd.Parameters.AddWithValue("@first_name", NpgsqlTypes.NpgsqlDbType.Varchar, FirstName);
             }
 

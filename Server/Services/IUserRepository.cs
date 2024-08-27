@@ -9,7 +9,7 @@ namespace Server.Services
 
         public Task<User> GetUserById(Guid id);
 
-        public Task<IEnumerable<User>> SearchUser(string FirstName, string LastName);
+        public Task<IEnumerable<User>> SearchUser(string FirstName, string LastName, bool useTS);
 
         public Task<int> CreateUser(User user, Guid userGuid);
 

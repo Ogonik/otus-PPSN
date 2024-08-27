@@ -16,5 +16,6 @@ namespace Server.Models.User
         [StringLength(100, ErrorMessage = "Значение поля \"Фамилия пользователя\" не может быть больше {0} символов")]
         public string LastName { get; set; } = string.Empty;
 
+        public bool UseTS { get; set; } = false;
     }
 }

@@ -173,30 +173,50 @@ namespace Server.Services
             return user;
         }
 
-        public async Task<IEnumerable<User>> SearchUser(string FirstName, string LastName)
+        public async Task<IEnumerable<User>> SearchUser(string firstName, string lastName, bool useTSQuery = false)
         {
             List<User> usersFound = new List<User>();
             var whereClause = string.Empty;
             // сформируем условие на where имея в виду что оба параметра не могут быть пустыми - отрезали на валидации
 
             using var cmd = connection.CreateCommand();
-
-            if (FirstName != string.Empty && LastName != string.Empty)
+            if (!useTSQuery)
             {
-                whereClause = $" WHERE u.last_name LIKE '%@last_name%' AND u.first_name LIKE '%@first_name%' AND is_removed = false";
-                cmd.Parameters.AddWithValue("@last_name", NpgsqlTypes.NpgsqlDbType.Varchar, LastName);
-                cmd.Parameters.AddWithValue("@first_name", NpgsqlTypes.NpgsqlDbType.Varchar, FirstName);
+                if (firstName != string.Empty && lastName != string.Empty)
+                {
+                    whereClause = $" WHERE u.last_name ILIKE '%{lastName}%' AND u.first_name ILIKE '%{firstName}%' AND is_removed = false";
+                    cmd.Parameters.AddWithValue("@lastName", NpgsqlTypes.NpgsqlDbType.Varchar, lastName);
+                    cmd.Parameters.AddWithValue("@firstName", NpgsqlTypes.NpgsqlDbType.Varchar, firstName);
+                }
+                else if (firstName == string.Empty)
+                {
+                    whereClause = $" WHERE u.last_name ILIKE '%@lastName%'";
+                    cmd.Parameters.AddWithValue("@lastName", NpgsqlTypes.NpgsqlDbType.Varchar, lastName);
+                }
+                else if (lastName == string.Empty)
+                {
+                    whereClause = $" WHERE u.first_name ILIKE '%@firstName%'";
+                    cmd.Parameters.AddWithValue("@firstName", NpgsqlTypes.NpgsqlDbType.Varchar, firstName);
+                }
             }
-            else if (FirstName == string.Empty)
+            else
             {
-                whereClause = $" WHERE u.last_name LIKE '%@last_name%'";
-                cmd.Parameters.AddWithValue("@last_name", NpgsqlTypes.NpgsqlDbType.Varchar, LastName);
-            }
-            else if (LastName == string.Empty)
-            {
-                whereClause = $" WHERE u.first_name LIKE '%@first_name%'";
-                cmd.Parameters.AddWithValue("@first_name", NpgsqlTypes.NpgsqlDbType.Varchar, FirstName);
-            }
+                if (firstName != string.Empty && lastName != string.Empty)
+                {
+                    whereClause = $" WHERE to_tsvector('russian', u.last_name) @@ to_tsquery('russian', '{lastName}:*') AND to_tsvector('russian', u.first_name) @@ to_tsquery('russian', '{firstName}:*') ";
+                   
+                }
+                else if (firstName == string.Empty)
+                {
+                    whereClause = $" WHERE u.last_name ILIKE '%@lastName%'";
+                    cmd.Parameters.AddWithValue("@lastName", NpgsqlTypes.NpgsqlDbType.Varchar, lastName);
+                }
+                else if (lastName == string.Empty)
+                {
+                    whereClause = $" WHERE u.first_name ILIKE '%@firstName%'";
+                    cmd.Parameters.AddWithValue("@firstName", NpgsqlTypes.NpgsqlDbType.Varchar, firstName);
+                }
+            }    
 
             cmd.CommandText = $"SELECT * FROM public.\"user\" u " + whereClause;
             logger.LogInformation("Final search query is {query}", cmd.CommandText);

@@ -216,7 +216,7 @@ namespace Server.Controllers
             {
                 _logger.LogInformation("Start searching users...");
 
-                var result = await _userRepository.SearchUser(userSearchQuery.FirstName, userSearchQuery.LastName);
+                var result = await _userRepository.SearchUser(userSearchQuery.FirstName, userSearchQuery.LastName, userSearchQuery.UseTS);
                 _logger.LogInformation("Found {count} users by search query", result.ToList().Count);
 
                 if (result.Any())
